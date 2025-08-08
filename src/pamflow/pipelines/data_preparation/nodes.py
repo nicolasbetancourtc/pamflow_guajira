@@ -9,6 +9,9 @@ import os
 from maad import util
 import pandas as pd
 import logging
+from pamflow.pipelines.data_preparation.utils import (
+    add_file_prefix
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +34,15 @@ def get_media_file(input_path):
         media@pamDP.
     """
 
-    # add_file_prefix(folder_name=input_path,
-    #                recursive=True
-    #                )
+    add_file_prefix(folder_name=input_path,
+                recursive=True
+                )
     logger.info(f"Preparing data from {input_path}...")
     metadata = util.get_metadata_dir(input_path, False)
+    print(metadata['sensor_name'].nunique())
     metadata.dropna(inplace=True)  # remove problematic files
+    print(metadata['sensor_name'].nunique())
+
     columns_names_dict = {
         "path_audio": "filePath",
         "fname": "mediaID",
@@ -149,6 +155,9 @@ def field_deployments_sheet_to_deployments(plantilla_usuario, media_summary):
 
     deployments['deploymentStart']=deployments["Fecha inicial"].astype(str) + ' ' + deployments['Hora inicial'].astype(str)
     deployments['deploymentEnd'  ]=deployments["Fecha final"  ].astype(str) + ' ' + deployments['Hora final'  ].astype(str)
+    deployments= deployments[ (~deployments['deploymentStart' ].str.contains('[a-zA-Z]'))
+                            & (~deployments['deploymentEnd' ].str.contains('[a-zA-Z]'))
+                            ]
     deployments=deployments.astype({'deploymentStart':'datetime64[ns]',
                     'deploymentEnd' :'datetime64[ns]'
                 })
